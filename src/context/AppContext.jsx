@@ -1,52 +1,60 @@
-import React, { useState } from "react";
-import { createContext } from "react";
+import React, { useEffect, useState, createContext } from "react";
 import baseUrl from "../baseUrl";
 
-export const AppContext = createContext();
+export const AppContext = createContext(); // Create the AppContext
 
-export default function AppContextProvider({ children }) {
-  const [loading, setLoading] = useState(false);
-  const [post, setPost] = useState([]);
+const AppContextProvider = ({ children }) => {
+  // Creating state variables
   const [page, setPage] = useState(1);
+  const [posts, setPosts] = useState([]);
   const [totalPage, setTotalPage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Data fetching by using API
-  const fetchData = async (page = 1) => {
+  // Calling to API
+  const fetchBlogData = async (page = 1) => {
     let url = `${baseUrl}?page=${page}`;
     setLoading(true);
+
     try {
-      const response = await fetch(url);
-      const output = await response.json();
-      console.log(output);
-      setPage(output.page);
-      setPost(output.posts);
-      setTotalPage(output.totalPages);
-    } catch (err) {
-      console.log(`Error found for ${err}`);
+      const result = await fetch(url);
+      const data = await result.json();
+      console.log(data);
+      setPage(data.page);
+      setPosts(data.posts);
+      setTotalPage(data.totalPages);
+    } catch (error) {
+      console.log(error);
       setPage(1);
+      setPosts([]);
       setTotalPage(null);
-      setPost([]);
     }
     setLoading(false);
   };
 
-  const handlePageChange = (page) => {
+  useEffect(() => {
+    fetchBlogData();
+  }, []);
+
+  const handalSetPage = (page) => {
     setPage(page);
-    fetchData(page);
+    fetchBlogData(page);
   };
 
+  // Providing context value
   const value = {
-    loading,
-    setLoading,
-    post,
-    setPost,
     page,
     setPage,
+    posts,
+    setPosts,
     totalPage,
     setTotalPage,
-    fetchData,
-    handlePageChange,
+    loading,
+    setLoading,
+    fetchBlogData,
+    handalSetPage,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
-}
+  return <AppContext.Provider value={value}> {children} </AppContext.Provider>;
+};
+
+export default AppContextProvider;
